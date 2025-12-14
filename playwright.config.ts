@@ -10,7 +10,7 @@ export default defineConfig({
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 1 : 1,
   workers: process.env.CI ? 1 : 2,
-  reporter: 'html',
+
   use: {
     baseURL: "https://conduit-api.learnwebdriverio.com",
     trace: 'on-first-retry',
@@ -34,5 +34,17 @@ export default defineConfig({
       use: { ...devices['Desktop Chrome'] },
     }
   ],
+
+  reporter: [["list"],
+  ['html', {
+    outputFolder: 'playwright-report',
+    open: 'never' // 'always' / 'on-failure'
+  }],
+  ['./helpers/DiscordReporter.ts', {
+    enabled: true,
+    includeFailedTests: true,
+    maxFailedTestsToShow: 5
+  }],
+  ]
 
 });

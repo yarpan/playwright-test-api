@@ -129,7 +129,7 @@ The Discord notification appears as a rich embed with:
 
 ```
 ┌─────────────────────────────────────────────┐
-│ ✅ Test Execution: PASSED                   │
+│ ❌ Test Execution: FAILED                   │
 ├─────────────────────────────────────────────┤
 │ 📦 Project          🌐 Environment          │
 │ tests-ai            https://app.example.com │
@@ -139,19 +139,30 @@ The Discord notification appears as a rich embed with:
 │                                             │
 │ 📊 Results                                  │
 │ Total: 25                                   │
-│ Passed: 23 ✅                               │
+│ Passed: 22 ✅                               │
 │ Failed: 2 ❌                                │
 │ Skipped: 0 ⏭️                               │
-│ Pass Rate: 92.0%                            │
+│ Flaky: 1 🔄                                 │
+│ Pass Rate: 88.0%                            │
 │                                             │
 │ ❌ Failed Tests                             │
-│ 1. Buyer can create order                   │
-│    📄 File: order.spec.ts                   │
-│    💬 Error: Expected element to be visible │
+│ 📄 order.spec.ts                            │
+│ • Buyer can create order                    │
+│ • Buyer can update order                    │
+│                                             │
+│ 📄 listing.spec.ts                          │
+│ • Staff can search listing                  │
+│                                             │
+│ ... and 2 more failed tests                 │
 ├─────────────────────────────────────────────┤
 │ Playwright Test Reporter    Today at 10:30  │
 └─────────────────────────────────────────────┘
 ```
+
+**Notes:**
+- Failed tests are grouped by spec file
+- Flaky tests (passed after retry) are tracked separately
+- If more than `maxFailedTestsToShow` tests fail, remaining count is shown
 
 The embed color changes based on status:
 - 🟢 Green - All tests passed

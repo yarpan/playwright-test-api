@@ -56,6 +56,9 @@ interface DiscordWebhookPayload {
 /**
  * Custom Playwright Reporter that sends test execution results to Discord
  *
+ * This reporter is standalone and can be copied to any project.
+ * It only depends on @playwright/test/reporter and dotenv.
+ *
  * Setup:
  * 1. Create a Discord webhook in your channel settings
  * 2. Set DISCORD_WEBHOOK_URL in .env file
@@ -81,7 +84,7 @@ class DiscordReporter implements Reporter {
   private baseUrl: string = "";
 
   constructor(options: DiscordConfig = {}) {
-    // Credentials from .env file
+    // Credentials from .env file or options
     this.webhookUrl = options.webhookUrl || process.env.DISCORD_WEBHOOK_URL || "";
 
     // Options from playwright.config.ts
@@ -261,22 +264,37 @@ class DiscordReporter implements Reporter {
       },
     ];
 
-    // Add failed tests details
+    // Add failed tests details (grouped by file)
     if (this.includeFailedTests && this.failedTests.length > 0) {
-      const testsToShow = this.failedTests.slice(0, this.maxFailedTestsToShow);
+      // Group failed tests by file
+      const testsByFile = new Map<string, string[]>();
+      for (const test of this.failedTests) {
+        const tests = testsByFile.get(test.file) || [];
+        tests.push(test.title);
+        testsByFile.set(test.file, tests);
+      }
 
-      let failedTestsValue = testsToShow
-        .map(
-          (test, index) =>
-            `**${index + 1}. ${test.title}**\n` +
-            `📄 File: \`${test.file}\`\n` +
-            `💬 Error: _${test.error}_`
-        )
-        .join("\n\n");
+      // Build the output grouped by file
+      let failedTestsValue = "";
+      let testsShown = 0;
+
+      for (const [file, tests] of testsByFile) {
+        if (testsShown >= this.maxFailedTestsToShow) break;
+
+        failedTestsValue += `📄 **${file}**\n`;
+        for (const testTitle of tests) {
+          if (testsShown >= this.maxFailedTestsToShow) {
+            break;
+          }
+          failedTestsValue += `• ${testTitle}\n`;
+          testsShown++;
+        }
+        failedTestsValue += "\n";
+      }
 
       if (this.failedTests.length > this.maxFailedTestsToShow) {
         const remaining = this.failedTests.length - this.maxFailedTestsToShow;
-        failedTestsValue += `\n\n_... and ${remaining} more failed tests_`;
+        failedTestsValue += `_... and ${remaining} more failed tests_`;
       }
 
       // Discord embed field value has 1024 character limit
@@ -286,7 +304,7 @@ class DiscordReporter implements Reporter {
 
       fields.push({
         name: "❌ Failed Tests",
-        value: failedTestsValue,
+        value: failedTestsValue.trim(),
         inline: false,
       });
     }
@@ -324,6 +342,10 @@ class DiscordReporter implements Reporter {
       } else {
         console.log("[Discord Reporter] Notification sent successfully");
       }
+      
+      // Small delay to allow Windows async handles to close properly
+      // Fixes: "Assertion failed: !(handle->flags & UV_HANDLE_CLOSING)" error
+      await new Promise(resolve => setTimeout(resolve, 200));
     } catch (error) {
       console.error(`[Discord Reporter] Error sending message - ${error}`);
     }

@@ -14,7 +14,7 @@ Step-by-step guide to configure Telegram notifications for Playwright test resul
 6. BotFather will ask for a username - must end with `bot` (e.g., `kommodity_qa_bot`)
 7. BotFather will reply with your **bot token** - looks like this:
    ```
-   7123456789:AAHdqTcvCH1vGWJxfSeofSAs0K5PALDsaw
+   TOKENPART1:TOKENPART2
    ```
 8. **Copy and save this token** - you'll need it in Step 3
 
